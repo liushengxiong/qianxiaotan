@@ -43,14 +43,15 @@ test("every city opens a map with direct links to all of its scenic details",()=
     assert.doesNotMatch(text(html),/[A-Za-z]|黔行有知|小知/);
   }
 });
-test("map progress and detail present the new editorial overview",()=>{
+test("map progress and detail present the new in-product article overview",()=>{
   const scenic=getScenic("huangguoshu");
   const visit={scenic_id:scenic.id,listened:["story"],checked_at:"2026-08-28",quiz_score:0,answers:[0,0,0,0,0],journal_at:"2026-08-28",updated_at:"2026-08-28"};
   const media=[{id:"saved-card",scenic_id:scenic.id,kind:"postcard"}];
   const home=render(MobileHome,{city:"anshun",data:{...EMPTY_STATE,visits:[visit],media},onGuide(){}});
   assert.match(home,/已探索 100%/);
   const detail=render(ScenicOverview,{scenic,onGuide(){}});
-  for(const label of ["景区介绍","景区短片预览","内容资料","待人工复核"])assert.ok(detail.includes(label));
+  for(const label of ["景区介绍","一分钟认识这一站","小探知识库","阅读全文"])assert.ok(detail.includes(label));
+  for(const removed of ["待人工复核","主来源","采集流程","target=\"_blank\""])assert.ok(!detail.includes(removed));
   assert.doesNotMatch(detail,/发现清单|旅行明信片/);
 });
 test("passport begins with nine stamps and exposes all 65 scenic entries",()=>{
@@ -66,7 +67,9 @@ test("onboarding and digital guide use the renamed Chinese identity",()=>{
   const onboarding=render(MobileOnboarding,{initial:null,busy:false,onComplete:async()=>true});
   const guide=render(DigitalGuide,{open:true,scenic:getScenic("huangguoshu"),onClose(){}});
   assert.match(onboarding,/黔小探/);assert.match(guide,/我是小探/);
-  assert.match(guide,/二维形象动效/);assert.match(guide,/未接入实时智能服务/);
+  assert.match(fs.readFileSync("app/components/mobile-onboarding.tsx","utf8"),/请选择你的身份/);
+  assert.match(guide,/小探会结合当前景区内容回答/);
+  assert.doesNotMatch(guide,/互动演示|未接入实时智能服务|二维形象动效/);
   assert.doesNotMatch(text(onboarding+guide),/[A-Za-z]|黔行有知|小知/);
 });
 test("interface literals contain no decorative English or former brand names",()=>{
@@ -81,4 +84,9 @@ test("interface literals contain no decorative English or former brand names",()
       ts.forEachChild(node,visit);
     }visit(tree);
   }}walk("app");assert.deepEqual(failures,[]);
+});
+
+test("public component copy contains no internal editorial workflow labels",()=>{
+  const source=fs.readdirSync("app/components").filter(file=>file.endsWith(".tsx")).map(file=>fs.readFileSync(path.join("app/components",file),"utf8")).join("\n");
+  assert.doesNotMatch(source,/待人工复核|示例脚本|预置知识演示|未接入实时智能服务|资料来源与智能采集流程|互动演示/);
 });

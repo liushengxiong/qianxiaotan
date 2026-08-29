@@ -4,11 +4,12 @@ import test from "node:test";
 import { GUIDE_PHASES, guideGreeting, guideSuggestions, guideAnswer, speechErrorMessage } from "../app/lib/guide.ts";
 import { SCENICS, getScenic, answerFromDemo } from "../app/lib/catalog.ts";
 
-test("Xiaozhi retains the supplied identity and discloses the demo provider", () => {
+test("Xiaozhi retains the supplied identity and stays focused on the journey", () => {
   const reply = guideAnswer(getScenic("huangguoshu"), "小探，介绍一下自己", answerFromDemo);
   assert.match(reply, /我是小探/);
   assert.match(reply, /贵州少年探索向导/);
-  assert.match(reply, /没有连接实时智能问答/);
+  assert.match(reply, /一起出发/);
+  assert.doesNotMatch(reply, /演示|预置|未接入/);
 });
 
 test("greetings and suggestions follow every destination's scenic context", () => {
@@ -31,7 +32,7 @@ test("all avatar phases have an honest label and human-readable hint", () => {
   for (const state of Object.values(GUIDE_PHASES)) {
     assert.ok(state.label.length > 1); assert.ok(state.hint.length > 1);
   }
-  assert.match(GUIDE_PHASES.thinking.hint, /示例/);
+  assert.match(GUIDE_PHASES.thinking.hint, /景区/);
   assert.match(GUIDE_PHASES.requesting.hint, /允许/);
 });
 

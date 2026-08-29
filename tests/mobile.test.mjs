@@ -3,6 +3,7 @@ import test from "node:test";
 import fs from "node:fs";
 import {travelProgress,validatePhoto,personalLeaderboard} from "../app/lib/mobile.ts";
 import {NOTION_TOPICS,topicsForScenic} from "../app/lib/notion-content.ts";
+import {NOTION_ARTICLES,articleByTopic,questionsFromArticle} from "../app/lib/notion-articles.ts";
 import {getScenic} from "../app/lib/catalog.ts";
 
 test("demo progress is memory-only and covers the remaining four activities",()=>{
@@ -19,6 +20,8 @@ test("local album validates photos without any mobile persistence calls",()=>{
 });
 test("all Notion content rows are bundled and scenic-aware",()=>{
   assert.equal(NOTION_TOPICS.length,90);assert.equal(new Set(NOTION_TOPICS.map(item=>item.region)).size,9);
+  assert.equal(NOTION_ARTICLES.length,90);assert.equal(new Set(NOTION_ARTICLES.map(item=>item.topic)).size,90);
   const waterfall=topicsForScenic(getScenic("huangguoshu"));assert.equal(waterfall.length,4);assert.ok(waterfall.some(item=>item.title.includes("黄果树")||item.title.includes("白水河")));
+  const article=articleByTopic(waterfall[0].title);assert.ok(article?.headline);assert.ok(article?.sections.length>=5);assert.ok(questionsFromArticle(article).length>=3);
   for(const item of NOTION_TOPICS){assert.ok(item.title);assert.match(item.source,/^https:\/\//);assert.ok(["低","中","高"].includes(item.risk))}
 });

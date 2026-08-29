@@ -169,12 +169,11 @@ export function DigitalGuide({ open, scenic, onClose }: Props) {
     <aside ref={panel} className="digital-guide" tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="guide-title">
       <header className="guide-header"><div><XiaozhiArt className="guide-header-avatar" /><span><h2 id="guide-title">小探 <i>贵州少年探索向导</i></h2><small>好奇 · 爱观察 · 爱提问 · 爱旅行</small></span></div><button onClick={onClose} className="guide-close" aria-label="关闭小探数字人对话">×</button></header>
       <div className="guide-scroll">
-        <div className="guide-context"><span>本次一起探索</span><strong>⌖ {scenic.name}</strong><span className="guide-demo-label">互动演示</span></div>
+        <div className="guide-context"><span>本次一起探索</span><strong>⌖ {scenic.name}</strong></div>
         <section className={`guide-stage phase-${phase}`} aria-label="小探数字人形象">
           <div className="guide-stage-copy"><span>你的贵州探索伙伴</span><h3>你问为什么，<br/>我们一起找答案。</h3><p>我是小探，<br/>准备好陪你出发了。</p><div className="guide-state" role="status"><i />{state.label}</div></div>
           <div className="guide-character"><XiaozhiArt pose="hero" label="戴着探险帽、背着背包、手拿地图的小探" /><span className="guide-expression"><XiaozhiArt pose={phase === "thinking" ? "thinking" : phase === "speaking" ? "happy" : "face"} /></span></div>
           <div className="guide-stage-floor" />
-          <div className="guide-stage-note">二维形象动效 · 非实时口型</div>
         </section>
         <div className="guide-subtitle" aria-live="polite"><div><span>小探说</span><button onClick={() => speak(caption)} disabled={!voiceEnabled || !supported.synthesis}>{phase === "speaking" ? "重新讲一遍" : "听小探说"} <i>▷</i></button></div><p><mark>{phase === "speaking" ? caption.slice(0, spokenIndex) : ""}</mark>{phase === "speaking" ? caption.slice(spokenIndex) : caption}</p></div>
         <div className="guide-playback"><span className={`guide-meter ${phase === "speaking" || recording ? "moving" : ""}`} aria-hidden="true">{[0,1,2,3,4].map(i => <i key={i} style={{ animationDelay: `${i * .13}s` }} />)}</span><span>{state.hint}</span>{busy && <button onClick={interrupt}>■ {recording ? "取消录音" : "打断小探"}</button>}</div>
@@ -186,7 +185,7 @@ export function DigitalGuide({ open, scenic, onClose }: Props) {
         {showConsent && <div className="guide-consent"><strong>开启语音输入</strong><p>浏览器可能将音频发送到其语音识别服务。本站不保存录音。请家长确认后开启，不要说出隐私信息。</p><button onClick={() => { setVoiceConsent(true); setShowConsent(false); setNotice("已确认。请再次点击“语音输入”开始说话。"); }}>同意，启用语音</button><button onClick={() => setShowConsent(false)}>继续打字</button></div>}
         <form onSubmit={event => { event.preventDefault(); ask(input); }}><label className="sr-only" htmlFor="guide-question">向小探提问</label><input id="guide-question" value={input} onChange={event => setInput(event.target.value)} maxLength={300} placeholder={recording ? "正在听，识别文字会显示在这里…" : "小探，我想知道……"} /><button type="submit" disabled={!input.trim()} aria-label="发送问题给小探">↑</button></form>
         <div className="guide-controls"><button className={recording ? "recording" : ""} onClick={() => { if (recording) { try { recognition.current?.stop(); } catch { interrupt(); } } else startListening(); }}><span aria-hidden="true">◉</span>{recording ? "结束录音" : "语音输入"}</button><button aria-pressed={voiceEnabled} onClick={() => { if (voiceEnabled) interrupt(); setVoiceEnabled(!voiceEnabled); }}>{voiceEnabled ? "声音开启" : "仅文字"}</button><select aria-label="小探朗读音色" value={voiceName} onChange={event => { interrupt(); setVoiceName(event.target.value); }} disabled={!supported.synthesis}><option value="">设备中文音色</option>{voices.map((v, index) => <option key={v.voiceURI} value={v.name}>中文音色 {index + 1}</option>)}</select></div>
-        <p className="guide-disclosure">预置知识演示，未接入实时智能服务 · 语音需浏览器支持 · 对话仅保留在本页</p>
+        <p className="guide-disclosure">小探会结合当前景区内容回答 · 重要信息请以景区现场公告为准</p>
       </footer>
     </aside>
   </>;

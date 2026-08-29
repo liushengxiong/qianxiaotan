@@ -14,7 +14,7 @@ export function MobileOnboarding({initial,busy,onComplete}:{initial:MobileProfil
     <div className="onboarding-questions">
     <div className="m-step-dots" aria-label={"引导第 "+(step+1)+" 步，共 3 步"}>{[0,1,2].map(n=><i key={n} className={n<=step?"active":""}/>)}</div>
     <small>一场属于你们的贵州探索</small>
-    <h1>{["你好呀，该怎么称呼你？","这一次，谁陪孩子出发？","第一站，想去哪里？"][step]}</h1>
+    <h1>{["你好呀，该怎么称呼你？","请选择你的身份","第一站，想去哪里？"][step]}</h1>
     <p>{["一个喜欢的昵称就好，让我们的旅程从认识开始。","一起观察、一起提问，做彼此最好的旅行搭子。","贵州 9 个市州，每一站都有值得收藏的发现。"][step]}</p>
     <form onSubmit={async e=>{e.preventDefault();if(step<2)setStep(step+1);else await onComplete({nickname:nickname.trim(),role,city})}}>
       {step===0&&<label className="m-nickname"><span>你的昵称</span><input autoComplete="nickname" autoFocus maxLength={16} required value={nickname} onChange={e=>setNickname(e.target.value)} placeholder="例如：小林一家"/><small>不必填写真实姓名 · 最多 16 字</small></label>}

@@ -1,3 +1,6 @@
+import {articleByTopic,questionsFromArticle} from "./notion-articles.ts";
+import {topicsForScenic} from "./notion-content.ts";
+
 export type CityId = "guiyang" | "anshun" | "zunyi" | "liupanshui" | "bijie" | "tongren" | "qiandongnan" | "qiannan" | "qianxinan";
 export type City = { id: CityId; name: string; fullName: string; english: string; theme: string; line: string };
 export type Scenic = { id: string; cityId: CityId; name: string; lat: number; lon: number; kind: "water" | "culture" | "nature"; summary: string; image?: string; demo: boolean };
@@ -107,12 +110,10 @@ export function hotspotsFor(scenic: Scenic){
 }
 
 export function chaptersFor(scenic: Scenic): Chapter[] {
-  if (scenic.id === "huangguoshu") return [
-    {id:"story",title:"从白水河到黄果树",text:"欢迎来到安顺的黄果树。根据贵州省民政厅的地名故事，黄果树瀑布原名白水河瀑布。一个地名，也可以成为认识地方的入口。和孩子一起想一想：你家乡有没有用树木、河流或山峰命名的地方？这次，我们先记住白水河，再用自己的眼睛寻找水的故事。"},
-    {id:"observe",title:"把水声变成一次发现",text:"现在请站在允许停留的观景区域，和家人一起看向水帘。水流落下，撞击岩石和水面，分散成细小的水滴。这些飘在空气里的水滴，就是水雾。观察水雾时，不需要靠近护栏外侧。可以先看、再听、最后用一句话描述你们的发现。水量和观景条件会变化，请以现场提示为准。"},
-  ];
+  const articles=topicsForScenic(scenic,2).map(topic=>articleByTopic(topic.title)).filter(Boolean);
+  if(articles.length)return articles.map((article,index)=>({id:index===0?"story":"observe",title:article!.headline,text:[article!.lead,...article!.sections.filter(section=>!["听完挑战","你还可以问小知"].includes(section.heading)).slice(0,3).map(section=>section.body)].filter(Boolean).join("\n\n")})).slice(0,2);
   return [
-    {id:"story",title:`先认识${scenic.name}`,text:`欢迎来到${getCity(scenic.cityId).name}的${scenic.name}。${scenic.summary} 这是一段预置的探索引导，不是实时生成的景区讲解。先读一读现场的介绍牌，记下一个名字或关键词。关于具体年代、人物和开放安排，请以景区正式说明为准。`},
+    {id:"story",title:`先认识${scenic.name}`,text:`欢迎来到${getCity(scenic.cityId).name}的${scenic.name}。${scenic.summary} 先读一读现场的介绍牌，记下一个名字或关键词。关于具体年代、人物和开放安排，请以景区正式说明为准。`},
     {id:"observe",title:"一起做一个细心的观察者",text:scenic.kind==="culture"?"走进文化景点，除了拍照，我们还可以观察建筑材料、空间布局和现场展陈。先记录自己真正看见的细节，再区分哪些是观察，哪些只是猜测。不要触摸禁止触碰的文物，尊重当地居民的生活。接下来，请家长和孩子各选一处细节，交换自己的发现。":"在自然景点，先停在安全、允许停留的位置。看一看远处和近处，听一听连续的声音和偶尔出现的声音。记录植物、岩石、水或光线的一种变化。观察不需要采摘、投喂或离开指定步道。接下来，请和家人交换各自注意到的细节。"},
   ];
 }
@@ -124,10 +125,13 @@ export function tasksFor(scenic: Scenic): Quest[] {
   ];
 }
 export function questionsFor(scenic: Scenic): Question[] {
+  const article=articleByTopic(topicsForScenic(scenic,1)[0]?.title||"");
+  const articleQuestions=questionsFromArticle(article) as Question[];
+  if(articleQuestions.length>=3)return articleQuestions;
   const city=getCity(scenic.cityId);
   return [
     {id:"city",type:"single",prompt:`${scenic.name}属于贵州哪个市州？`,options:[city.name,...CITIES.filter(c=>c.id!==city.id).slice(0,2).map(c=>c.name)],correct:0,explanation:`景区概要与地图标注显示：${scenic.name}位于${city.fullName}。`},
-    scenic.id==="huangguoshu"?{id:"history",type:"single",prompt:"讲解中提到，黄果树瀑布原来的名字是什么？",options:["红水河瀑布","白水河瀑布","银水河瀑布"],correct:1,explanation:"预置讲解参考贵州省民政厅地名故事：黄果树瀑布原名白水河瀑布。"}:{id:"observe",type:"single",prompt:"怎样让一条观察记录更有说服力？",options:["只写好看","只抄一个结论","描述真实看到的细节"],correct:2,explanation:"先描述颜色、形状或材料等细节，再提出猜测，是这次任务鼓励的观察方法。"},
+    scenic.id==="huangguoshu"?{id:"history",type:"single",prompt:"讲解中提到，黄果树瀑布原来的名字是什么？",options:["红水河瀑布","白水河瀑布","银水河瀑布"],correct:1,explanation:"黄果树瀑布原名白水河瀑布。"}:{id:"observe",type:"single",prompt:"怎样让一条观察记录更有说服力？",options:["只写好看","只抄一个结论","描述真实看到的细节"],correct:2,explanation:"先描述颜色、形状或材料等细节，再提出猜测，是这次任务鼓励的观察方法。"},
     {id:"knowledge",type:"single",prompt:scenic.kind==="water"?"水雾主要由什么组成？":"遇到不知道的景区历史，应怎样确认？",options:scenic.kind==="water"?["细小的水滴","烟尘","石头粉末"]:["只凭外观猜测","查看正式介绍与可靠资料","把所有传说当作事实"],correct:scenic.kind==="water"?0:1,explanation:scenic.kind==="water"?"水流撞击后分散成细小水滴，飘散在空气中就形成水雾。":"把观察、推测和有来源的事实区分开，能更准确地认识一个地方。"},
     {id:"safe",type:"boolean",prompt:"为了完成探索任务，可以跨过护栏或离开指定步道。",options:["正确","错误"],correct:1,explanation:"安全始终优先。所有观察任务都应在允许停留的区域完成。"},
     {id:"family",type:"boolean",prompt:"家长和孩子观察到不同细节，也是一种有价值的发现。",options:["正确","错误"],correct:0,explanation:"交换各自看到的细节，可以让一次探索拥有更多视角。"},
@@ -137,7 +141,7 @@ export function answerFromDemo(scenic: Scenic, question: string): string {
   if(/简单|孩子/.test(question)) return `可以这样和孩子说：${scenic.summary} 我们先找一个细节，再用自己的话说出来。`;
   if(/任务|做什么/.test(question)) return tasksFor(scenic)[0].prompt;
   if(/水雾|白色/.test(question)&&scenic.kind==="water") return "水流撞击岩石和水面，会分散成细小水滴。许多水滴飘在空气里，就形成了水雾。";
-  if(/名字|原名|白水河/.test(question)&&scenic.id==="huangguoshu") return "预置资料中提到：黄果树瀑布原名白水河瀑布。可以打开“听一听”里的资料来源继续了解。";
+  if(/名字|原名|白水河/.test(question)&&scenic.id==="huangguoshu") return "黄果树瀑布原名白水河瀑布。你还可以打开景区文章继续了解它的名字与故事。";
   if(/哪里|哪个市|位置/.test(question)) return `${scenic.name}属于${getCity(scenic.cityId).fullName}。首页地图展示的是景区大致位置，不用于现场导航。`;
-  return "这个问题暂时不在示例知识库里，我不会替你编造答案。可以记录下来，查看现场正式介绍，或试试上面的示例问题。实时智能问答将在后续接入。";
+  return "这个问题暂时没有找到可靠答案。可以先记下来，再查看景区文章或现场正式介绍。";
 }
