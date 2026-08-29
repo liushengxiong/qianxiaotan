@@ -1,0 +1,1 @@
+ALTER TABLE `mobile_visits` ADD `journal_at` text;
